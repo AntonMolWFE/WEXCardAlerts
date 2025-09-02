@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alerts Questionnaire</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        :root {
+            --wex-red: #C8102E;
+            --slate-blue: #253746;
+            --teal: #00C7B1;
+            --sky-blue: #A2DDF8;
+            --yellow: #FFBF3F;
+            --white: #FFFFFF;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--sky-blue);
+            color: var(--slate-blue);
+        }
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: var(--white);
+            border-radius: 1rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        .step-section {
+            display: none;
+        }
+        .step-section.active {
+            display: block;
+        }
+        .btn-primary {
+            background-color: var(--wex-red);
+            color: var(--white);
+            transition: background-color 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: #a30e25;
+        }
+        .btn-secondary {
+            background-color: var(--slate-blue);
+            color: var(--white);
+            transition: background-color 0.2s;
+        }
+        .btn-secondary:hover {
+            background-color: #1e2c38;
+        }
+        input[type="checkbox"]:checked {
+            background-color: var(--teal);
+            border-color: var(--teal);
+        }
+        .alert-item {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .alert-item:hover {
+            background-color: var(--sky-blue);
+        }
+        .parameters-group {
+            border: 1px solid var(--sky-blue);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            background-color: #f0f8ff;
+            transition: all 0.3s ease-in-out;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            margin-top: 1rem;
+        }
+        .parameters-group.active {
+            max-height: 500px;
+            opacity: 1;
+            border-color: var(--sky-blue);
+        }
+        .input-error {
+            border-color: var(--wex-red);
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body class="p-6">
+
+<div class="container">
+    <div class="flex justify-end space-x-2 mb-4">
+        <button id="lang-nl" class="px-4 py-1 text-sm rounded-full font-semibold border border-gray-400 hover:bg-gray-200">NL</button>
+        <button id="lang-en" class="px-4 py-1 text-sm rounded-full font-semibold border border-gray-400 hover:bg-gray-200">EN</button>
+        <button id="lang-fr" class="px-4 py-1 text-sm rounded-full font-semibold border border-gray-400 hover:bg-gray-200">FR</button>
+    </div>
+    
+    <h1 id="form-title" class="text-3xl font-bold text-center mb-8">Alerts Configuration Form</h1>
+    <div id="auth-status" class="text-sm text-gray-500 text-center mb-4">Authentication not required for Google Sheets.</div>
+
+    <!-- Step 1: General Data -->
+    <div id="step-1" class="step-section active">
+        <h2 id="step-1-title" class="text-2xl font-semibold mb-6 text-gray-800">Step 1: General Customer Data</h2>
+        <div class="space-y-4">
+            <div>
+                <label for="customerName" id="label-customerName" class="block font-medium text-gray-700">Company Name</label>
+                <input type="text" id="customerName" class="w-full p-2 border border-gray-300 rounded-md mt-1 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <label for="customerNumber" id="label-customerNumber" class="block font-medium text-gray-700">Customer Number</label>
+                <input type="text" id="customerNumber" class="w-full p-2 border border-gray-300 rounded-md mt-1 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <label for="emailAddress" id="label-emailAddress" class="block font-medium text-gray-700">Your Email Address</label>
+                <input type="email" id="emailAddress" class="w-full p-2 border border-gray-300 rounded-md mt-1 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <label for="alertEmailAddress" id="label-alertEmailAddress" class="block font-medium text-gray-700">Email Address for Receiving Alerts</label>
+                <input type="email" id="alertEmailAddress" class="w-full p-2 border border-gray-300 rounded-md mt-1 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+        </div>
+        <div class="flex justify-end mt-6">
+            <button id="next-1" class="btn btn-primary px-6 py-2 rounded-lg font-semibold">Next</button>
+        </div>
+    </div>
+
+    <!-- Step 2: Combined Selection and Parameters -->
+    <div id="step-2" class="step-section">
+        <h2 id="step-2-title" class="text-2xl font-semibold mb-6 text-gray-800">Step 2: Select & Configure Alerts</h2>
+        <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
+            <!-- Alert 1: Above X Volume -->
+            <div class="alert-item rounded-lg">
+                <div class="flex items-center p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <input type="checkbox" id="alert-1" data-alert-id="aboveXVolume" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2">
+                    <label for="alert-1" id="label-alert-1" class="font-medium text-gray-700 select-none flex-grow">1. Transaction Above Specified Volume</label>
+                </div>
+                <div id="params-aboveXVolume" class="parameters-group">
+                    <label for="axv-value" id="label-axv-value" class="block text-gray-700">Maximum volume per transaction (in liters)</label>
+                    <input type="number" id="axv-value" name="volume" placeholder="Enter a numeric value" class="w-full p-2 border border-blue-300 rounded-md mt-1 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+
+            <!-- Alert 2: Above X Spend -->
+            <div class="alert-item rounded-lg">
+                <div class="flex items-center p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <input type="checkbox" id="alert-2" data-alert-id="aboveXSpend" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2">
+                    <label for="alert-2" id="label-alert-2" class="font-medium text-gray-700 select-none flex-grow">2. Transaction Above Specified Spend</label>
+                </div>
+                <div id="params-aboveXSpend" class="parameters-group">
+                    <label for="axs-amount" id="label-axs-amount" class="block text-gray-700">Maximum spend per transaction (in EUR)</label>
+                    <input type="number" id="axs-amount" name="amount" placeholder="Enter an amount" class="w-full p-2 border border-blue-300 rounded-md mt-1 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+
+            <!-- Alert 3: Transaction Frequency -->
+            <div class="alert-item rounded-lg">
+                <div class="flex items-center p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <input type="checkbox" id="alert-3" data-alert-id="transactionFrequency" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2">
+                    <label for="alert-3" id="label-alert-3" class="font-medium text-gray-700 select-none flex-grow">3. Two Transactions within a Specified Timeframe</label>
+                </div>
+                <div id="params-transactionFrequency" class="parameters-group">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="tf-value" id="label-tf-value" class="block text-gray-700">Time between two transactions</label>
+                            <input type="number" id="tf-value" name="timeValue" placeholder="Enter a numeric value" class="w-full p-2 border border-blue-300 rounded-md mt-1 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label id="label-timeUnit" class="block text-gray-700">Time Unit</label>
+                            <div class="flex items-center mt-2 space-x-4">
+                                <label class="flex items-center">
+                                    <input type="radio" name="timeUnit" value="minutes" class="text-blue-600 focus:ring-blue-500 h-4 w-4 mr-1"> <span id="label-minutes">Minutes</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="timeUnit" value="hours" class="text-blue-600 focus:ring-blue-500 h-4 w-4 mr-1"> <span id="label-hours">Hours</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <p id="desc-tf" class="text-sm text-gray-500 mt-2">An alert will be sent if the time between transactions is shorter than the specified value.</p>
+                </div>
+            </div>
+            
+            <!-- Alert 4: Product Purchased with Transaction -->
+            <div class="alert-item rounded-lg">
+                <div class="flex items-center p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <input type="checkbox" id="alert-4" data-alert-id="productPurchased" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2">
+                    <label for="alert-4" id="label-alert-4" class="font-medium text-gray-700 select-none flex-grow">4. Products Purchased</label>
+                </div>
+                <div id="params-productPurchased" class="parameters-group">
+                    <label for="pp-product" id="label-pp-product" class="block text-gray-700">Product(s)</label>
+                    <input type="text" id="pp-product" name="product" placeholder="Enter product names (separated by commas)" class="w-full p-2 border border-blue-300 rounded-md mt-1 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+
+            <!-- Alert 5: Transaction outside certain French Departements -->
+            <div class="alert-item rounded-lg">
+                <div class="flex items-center p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <input type="checkbox" id="alert-5" data-alert-id="transactionOutsideDepartements" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2">
+                    <label for="alert-5" id="label-alert-5" class="font-medium text-gray-700 select-none flex-grow">5. Transaction Outside Certain French Departements</label>
+                </div>
+                <div id="params-transactionOutsideDepartements" class="parameters-group">
+                    <label for="tod-departements" id="label-tod-departements" class="block text-gray-700">French Departements</label>
+                    <input type="text" id="tod-departements" name="departements" placeholder="Enter departement numbers (separated by commas)" class="w-full p-2 border border-blue-300 rounded-md mt-1 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+
+            <!-- Alert 6: Transaction on Network(s) -->
+            <div class="alert-item rounded-lg">
+                <div class="flex items-center p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <input type="checkbox" id="alert-6" data-alert-id="transactionOnNetworks" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2">
+                    <label for="alert-6" id="label-alert-6" class="font-medium text-gray-700 select-none flex-grow">6. Transaction on Specified Network(s)</label>
+                </div>
+                <div id="params-transactionOnNetworks" class="parameters-group">
+                    <label for="ton-networks" id="label-ton-networks" class="block text-gray-700">Network(s)</label>
+                    <input type="text" id="ton-networks" name="networks" placeholder="Enter network names (separated by commas)" class="w-full p-2 border border-blue-300 rounded-md mt-1 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+
+            <!-- Alert 7: Transaction in Country -->
+            <div class="alert-item rounded-lg">
+                <div class="flex items-center p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <input type="checkbox" id="alert-7" data-alert-id="transactionInCountry" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2">
+                    <label for="alert-7" id="label-alert-7" class="font-medium text-gray-700 select-none flex-grow">7. Transaction in Specified Country</label>
+                </div>
+                <div id="params-transactionInCountry" class="parameters-group">
+                    <label id="label-countries" class="block text-gray-700 mb-2">Select the countries:</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <label class="flex items-center p-2 rounded-lg bg-white border border-gray-300 cursor-pointer">
+                            <input type="checkbox" name="country" value="Netherlands" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2"> <span id="label-country-nl">Netherlands</span>
+                        </label>
+                        <label class="flex items-center p-2 rounded-lg bg-white border border-gray-300 cursor-pointer">
+                            <input type="checkbox" name="country" value="Belgium" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2"> <span id="label-country-be">Belgium</span>
+                        </label>
+                        <label class="flex items-center p-2 rounded-lg bg-white border border-gray-300 cursor-pointer">
+                            <input type="checkbox" name="country" value="Germany" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2"> <span id="label-country-de">Germany</span>
+                        </label>
+                        <label class="flex items-center p-2 rounded-lg bg-white border border-gray-300 cursor-pointer">
+                            <input type="checkbox" name="country" value="France" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2"> <span id="label-country-fr">France</span>
+                        </label>
+                        <label class="flex items-center p-2 rounded-lg bg-white border border-gray-300 cursor-pointer">
+                            <input type="checkbox" name="country" value="Luxembourg" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2"> <span id="label-country-lu">Luxembourg</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alert 8: Dubious Odometer Entry -->
+            <div class="alert-item rounded-lg">
+                <div class="flex items-center p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <input type="checkbox" id="alert-8" data-alert-id="dubiousOdometer" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2">
+                    <label for="alert-8" id="label-alert-8" class="font-medium text-gray-700 select-none flex-grow">8. Dubious Odometer Entry</label>
+                </div>
+                <div id="params-dubiousOdometer" class="parameters-group">
+                    <p id="desc-dubiousOdometer" class="text-sm text-gray-500">This alert will be sent if the entered odometer reading is lower than the last registered odometer reading.</p>
+                </div>
+            </div>
+
+            <!-- Alert 9: Transaction on certain Day(s) -->
+            <div class="alert-item rounded-lg">
+                <div class="flex items-center p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <input type="checkbox" id="alert-9" data-alert-id="transactionOnDays" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2">
+                    <label for="alert-9" id="label-alert-9" class="font-medium text-gray-700 select-none flex-grow">9. Transaction on Certain Day(s)</label>
+                </div>
+                <div id="params-transactionOnDays" class="parameters-group">
+                    <label id="label-days" class="block text-gray-700 mb-2">Select the day(s):</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <label class="flex items-center p-2 rounded-lg bg-white border border-gray-300 cursor-pointer">
+                            <input type="checkbox" name="days" value="Monday" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2"> <span id="label-day-mo">Monday</span>
+                        </label>
+                        <label class="flex items-center p-2 rounded-lg bg-white border border-gray-300 cursor-pointer">
+                            <input type="checkbox" name="days" value="Tuesday" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2"> <span id="label-day-tu">Tuesday</span>
+                        </label>
+                        <label class="flex items-center p-2 rounded-lg bg-white border border-gray-300 cursor-pointer">
+                            <input type="checkbox" name="days" value="Wednesday" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2"> <span id="label-day-we">Wednesday</span>
+                        </label>
+                        <label class="flex items-center p-2 rounded-lg bg-white border border-gray-300 cursor-pointer">
+                            <input type="checkbox" name="days" value="Thursday" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2"> <span id="label-day-th">Thursday</span>
+                        </label>
+                        <label class="flex items-center p-2 rounded-lg bg-white border border-gray-300 cursor-pointer">
+                            <input type="checkbox" name="days" value="Friday" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2"> <span id="label-day-fr">Friday</span>
+                        </label>
+                        <label class="flex items-center p-2 rounded-lg bg-white border border-gray-300 cursor-pointer">
+                            <input type="checkbox" name="days" value="Saturday" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2"> <span id="label-day-sa">Saturday</span>
+                        </label>
+                        <label class="flex items-center p-2 rounded-lg bg-white border border-gray-300 cursor-pointer">
+                            <input type="checkbox" name="days" value="Sunday" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2"> <span id="label-day-su">Sunday</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alert 10: Transaction between certain Times -->
+            <div class="alert-item rounded-lg">
+                <div class="flex items-center p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <input type="checkbox" id="alert-10" data-alert-id="transactionBetweenTimes" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2">
+                    <label for="alert-10" id="label-alert-10" class="font-medium text-gray-700 select-none flex-grow">10. Transaction Between Certain Times</label>
+                </div>
+                <div id="params-transactionBetweenTimes" class="parameters-group">
+                    <label for="tbt-start" id="label-tbt-start" class="block text-gray-700">Start Time (HH:MM)</label>
+                    <input type="time" id="tbt-start" name="startTime" class="w-full p-2 border border-blue-300 rounded-md mt-1 focus:ring-blue-500 focus:border-blue-500">
+                    <label for="tbt-end" id="label-tbt-end" class="block text-gray-700 mt-4">End Time (HH:MM)</label>
+                    <input type="time" id="tbt-end" name="endTime" class="w-full p-2 border border-blue-300 rounded-md mt-1 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+
+        </div>
+        <div class="flex justify-between mt-6">
+            <button id="prev-2" class="btn btn-secondary px-6 py-2 rounded-lg font-semibold">Previous</button>
+            <button id="submit-form" class="btn btn-primary px-6 py-2 rounded-lg font-semibold">Submit</button>
+        </div>
+    </div>
+
+    <!-- Confirmation Page -->
+    <div id="step-3" class="step-section text-center">
+        <h2 id="step-3-title" class="text-2xl font-semibold mb-4 text-gray-800">Form Submitted Successfully!</h2>
+        <p id="desc-step-3" class="text-gray-600 mb-6">Thank you for completing the form. The data has been saved successfully.</p>
+        <p class="text-sm text-gray-500" id="desc-data-saved">Data saved to Google Sheets.</p>
+    </div>
+
+    <div id="status-message" class="text-center mt-4 font-medium"></div>
+
+</div>
+
+<script>
+    // THIS VARIABLE MUST BE FILLED BY YOU WITH THE URL OF YOUR GOOGLE APPS SCRIPT WEB APP
+    const googleAppsScriptURL = 'https://script.google.com/a/macros/wexinc.com/s/AKfycbwpFOE4AgCGsbUh2VbSQYb2qLjPOq64h560K6kw2Y6cdxmxfK5YAw-0GYSNj3Pz4Og1/exec';
+
+    // Language data
+    const translations = {
+        'nl': {
+            'form-title': 'Alerts Configuratie Formulier',
+            'step-1-title': 'Stap 1: Algemene Klantgegevens',
+            'label-customerName': 'Naam bedrijf',
+            'label-customerNumber': 'Klantnummer',
+            'label-emailAddress': 'Uw emailadres',
+            'label-alertEmailAddress': 'Emailadres voor het ontvangen van de Alerts',
+            'next-1': 'Volgende',
+            'step-2-title': 'Stap 2: Selecteer & Configureer Alerts',
+            'label-alert-1': '1. Transactie boven opgegeven hoeveelheid liters',
+            'label-axv-value': 'Maximaal volume per transactie (in liters)',
+            'placeholder-axv-value': 'Voer een numerieke waarde in',
+            'label-alert-2': '2. Transactie boven opgegeven bedrag',
+            'label-axs-amount': 'Maximale uitgaven per transactie (in EUR)',
+            'placeholder-axs-amount': 'Voer een bedrag in',
+            'label-alert-3': '3. Twee transacties binnen opgegeven tijdsbestek',
+            'label-tf-value': 'Tijd tussen twee transacties',
+            'placeholder-tf-value': 'Voer een numerieke waarde in',
+            'label-timeUnit': 'Tijdseenheid',
+            'label-minutes': 'Minuten',
+            'label-hours': 'Uren',
+            'desc-tf': 'Een alert wordt verstuurd als de tijd tussen transacties korter is dan de opgegeven waarde.',
+            'label-alert-4': '4. Aangekochte producten',
+            'label-pp-product': 'Product(en)',
+            'placeholder-pp-product': 'Voer productnamen in (gescheiden door komma\'s)',
+            'label-alert-5': '5. Transactie buiten opgegeven Franse departementen',
+            'label-tod-departements': 'Franse departementen',
+            'placeholder-tod-departements': 'Voer departementnummers in (gescheiden door komma\'s)',
+            'label-alert-6': '6. Transactie bij opgegeven Netwerk(en)',
+            'label-ton-networks': 'Netwerk(en)',
+            'placeholder-ton-networks': 'Voer netwerknamen in (gescheiden door komma\'s)',
+            'label-alert-7': '7. Transactie in opgegeven land',
+            'label-countries': 'Selecteer de landen:',
+            'label-country-nl': 'Nederland',
+            'label-country-be': 'België',
+            'label-country-de': 'Duitsland',
+            'label-country-fr': 'Frankrijk',
+            'label-country-lu': 'Luxemburg',
+            'label-alert-8': '8. Afwijkende kilometerstand',
+            'desc-dubiousOdometer': 'Deze alert wordt verstuurd als de ingevoerde kilometerstand lager is dan de laatst geregistreerde kilometerstand.',
+            'label-alert-9': '9. Transactie op opgegeven dag(en)',
+            'label-days': 'Selecteer de dag(en):',
+            'label-day-mo': 'Maandag',
+            'label-day-tu': 'Dinsdag',
+            'label-day-we': 'Woensdag',
+            'label-day-th': 'Donderdag',
+            'label-day-fr': 'Vrijdag',
+            'label-day-sa': 'Zaterdag',
+            'label-day-su': 'Zondag',
+            'label-alert-10': '10. Transactie tussen opgegeven tijden',
+            'label-tbt-start': 'Starttijd (HH:MM)',
+            'label-tbt-end': 'Eindtijd (HH:MM)',
+            'previous-btn': 'Vorige',
+            'submit-btn': 'Versturen',
+            'step-3-title': 'Formulier succesvol verzonden!',
+            'desc-step-3': 'Bedankt voor het invullen van het formulier. De gegevens zijn succesvol opgeslagen.',
+            'desc-data-saved': 'Gegevens opgeslagen in Google Sheets.',
+            'status-error-validation': 'Controleer de gemarkeerde velden en probeer het opnieuw.',
+            'status-error-url': 'Fout: Google Apps Script URL niet gevonden.',
+            'status-sending': 'Formulier wordt verzonden...',
+            'status-error-send': 'Fout bij het verzenden van het formulier. Probeer het opnieuw.'
+        },
+        'en': {
+            'form-title': 'Alerts Configuration Form',
+            'step-1-title': 'Step 1: General Customer Data',
+            'label-customerName': 'Company Name',
+            'label-customerNumber': 'Customer Number',
+            'label-emailAddress': 'Your Email Address',
+            'label-alertEmailAddress': 'Email Address for Receiving Alerts',
+            'next-1': 'Next',
+            'step-2-title': 'Step 2: Select & Configure Alerts',
+            'label-alert-1': '1. Transaction Above Specified Volume',
+            'label-axv-value': 'Maximum volume per transaction (in liters)',
+            'placeholder-axv-value': 'Enter a numeric value',
+            'label-alert-2': '2. Transaction Above Specified Spend',
+            'label-axs-amount': 'Maximum spend per transaction (in EUR)',
+            'placeholder-axs-amount': 'Enter an amount',
+            'label-alert-3': '3. Two Transactions within a Specified Timeframe',
+            'label-tf-value': 'Time between two transactions',
+            'placeholder-tf-value': 'Enter a numeric value',
+            'label-timeUnit': 'Time Unit',
+            'label-minutes': 'Minutes',
+            'label-hours': 'Hours',
+            'desc-tf': 'An alert will be sent if the time between transactions is shorter than the specified value.',
+            'label-alert-4': '4. Products Purchased',
+            'label-pp-product': 'Product(s)',
+            'placeholder-pp-product': 'Enter product names (separated by commas)',
+            'label-alert-5': '5. Transaction Outside Certain French Departements',
+            'label-tod-departements': 'French Departements',
+            'placeholder-tod-departements': 'Enter departement numbers (separated by commas)',
+            'label-alert-6': '6. Transaction on Specified Network(s)',
+            'label-ton-networks': 'Network(s)',
+            'placeholder-ton-networks': 'Enter network names (separated by commas)',
+            'label-alert-7': '7. Transaction in Specified Country',
+            'label-countries': 'Select the countries:',
+            'label-country-nl': 'Netherlands',
+            'label-country-be': 'Belgium',
+            'label-country-de': 'Germany',
+            'label-country-fr': 'France',
+            'label-country-lu': 'Luxembourg',
+            'label-alert-8': '8. Dubious Odometer Entry',
+            'desc-dubiousOdometer': 'This alert will be sent if the entered odometer reading is lower than the last registered odometer reading.',
+            'label-alert-9': '9. Transaction on Certain Day(s)',
+            'label-days': 'Select the day(s):',
+            'label-day-mo': 'Monday',
+            'label-day-tu': 'Tuesday',
+            'label-day-we': 'Wednesday',
+            'label-day-th': 'Thursday',
+            'label-day-fr': 'Friday',
+            'label-day-sa': 'Saturday',
+            'label-day-su': 'Sunday',
+            'label-alert-10': '10. Transaction Between Certain Times',
+            'label-tbt-start': 'Start Time (HH:MM)',
+            'label-tbt-end': 'End Time (HH:MM)',
+            'previous-btn': 'Previous',
+            'submit-btn': 'Submit',
+            'step-3-title': 'Form Submitted Successfully!',
+            'desc-step-3': 'Thank you for completing the form. The data has been saved successfully.',
+            'desc-data-saved': 'Data saved to Google Sheets.',
+            'status-error-validation': 'Check the highlighted fields and try again.',
+            'status-error-url': 'Error: Google Apps Script URL not found.',
+            'status-sending': 'Form is being sent...',
+            'status-error-send': 'Error sending the form. Please try again.'
+        },
+        'fr': {
+            'form-title': 'Formulaire de Configuration des Alertes',
+            'step-1-title': 'Étape 1: Données Générales du Client',
+            'label-customerName': 'Nom de l\'entreprise',
+            'label-customerNumber': 'Numéro de client',
+            'label-emailAddress': 'Votre adresse e-mail',
+            'label-alertEmailAddress': 'Adresse e-mail pour recevoir les alertes',
+            'next-1': 'Suivant',
+            'step-2-title': 'Étape 2: Sélectionner et Configurer les Alertes',
+            'label-alert-1': '1. Transaction au-dessus d\'un volume spécifié',
+            'label-axv-value': 'Volume maximum par transaction (en litres)',
+            'placeholder-axv-value': 'Entrez une valeur numérique',
+            'label-alert-2': '2. Transaction au-dessus d\'une dépense spécifiée',
+            'label-axs-amount': 'Dépense maximale par transaction (en EUR)',
+            'placeholder-axs-amount': 'Entrez un montant',
+            'label-alert-3': '3. Deux transactions dans un laps de temps spécifié',
+            'label-tf-value': 'Temps entre deux transactions',
+            'placeholder-tf-value': 'Entrez une valeur numérique',
+            'label-timeUnit': 'Unité de temps',
+            'label-minutes': 'Minutes',
+            'label-hours': 'Heures',
+            'desc-tf': 'Une alerte sera envoyée si le temps entre les transactions est plus court que la valeur spécifiée.',
+            'label-alert-4': '4. Produits Achetés',
+            'label-pp-product': 'Produit(s)',
+            'placeholder-pp-product': 'Entrez les noms des produits (séparés par des virgules)',
+            'label-alert-5': '5. Transaction en dehors de certains départements français',
+            'label-tod-departements': 'Départements français',
+            'placeholder-tod-departements': 'Entrez les numéros de département (séparés par des virgules)',
+            'label-alert-6': '6. Transaction sur un ou plusieurs réseaux spécifiés',
+            'label-ton-networks': 'Réseau(x)',
+            'placeholder-ton-networks': 'Entrez les noms des réseaux (séparés par des virgules)',
+            'label-alert-7': '7. Transaction dans un pays spécifié',
+            'label-countries': 'Sélectionnez les pays:',
+            'label-country-nl': 'Pays-Bas',
+            'label-country-be': 'Belgique',
+            'label-country-de': 'Allemagne',
+            'label-country-fr': 'France',
+            'label-country-lu': 'Luxembourg',
+            'label-alert-8': '8. Entrée de compteur kilométrique douteuse',
+            'desc-dubiousOdometer': 'Cette alerte sera envoyée si le relevé du compteur kilométrique entré is inférieur au dernier relevé enregistré.',
+            'label-alert-9': '9. Transactie certains jour(s)',
+            'label-days': 'Sélectionnez le(s) jour(s):',
+            'label-day-mo': 'Lundi',
+            'label-day-tu': 'Mardi',
+            'label-day-we': 'Mercredi',
+            'label-day-th': 'Jeudi',
+            'label-day-fr': 'Vendredi',
+            'label-day-sa': 'Samedi',
+            'label-day-su': 'Dimanche',
+            'label-alert-10': '10. Transactie entre certaines heures',
+            'label-tbt-start': 'Heure de début (HH:MM)',
+            'label-tbt-end': 'Heure de fin (HH:MM)',
+            'previous-btn': 'Précédent',
+            'submit-btn': 'Soumettre',
+            'step-3-title': 'Formulaire soumis avec succès!',
+            'desc-step-3': 'Merci d\'avoir rempli le formulaire. Les données ont été enregistrées avec succès.',
+            'desc-data-saved': 'Données enregistrées dans Google Sheets.',
+            'status-error-validation': 'Veuillez vérifier les champs en surbrillance et réessayer.',
+            'status-error-url': 'Erreur: URL du script Google Apps introuvable.',
+            'status-sending': 'Le formulaire est en cours d\'envoi...',
+            'status-error-send': 'Erreur lors de l\'envoi du formulaire. Veuillez réessayer.'
+        }
+    };
+
+    // UI elements
+    const steps = ['step-1', 'step-2', 'step-3'];
+    let currentStep = 0;
+
+    const statusMessage = document.getElementById('status-message');
+
+    // Language buttons
+    const langNlBtn = document.getElementById('lang-nl');
+    const langEnBtn = document.getElementById('lang-en');
+    const langFrBtn = document.getElementById('lang-fr');
+
+    // Buttons
+    const nextBtn1 = document.getElementById('next-1');
+    const prevBtn2 = document.getElementById('prev-2');
+    const submitBtn = document.getElementById('submit-form');
+    
+    // Form fields
+    const customerName = document.getElementById('customerName');
+    const customerNumber = document.getElementById('customerNumber');
+    const emailAddress = document.getElementById('emailAddress');
+    const alertEmailAddress = document.getElementById('alertEmailAddress');
+    const alertCheckboxes = document.querySelectorAll('#step-2 input[type="checkbox"]');
+    
+    // Function to set the language
+    function setLanguage(lang) {
+        const t = translations[lang];
+        
+        // Update general text
+        document.getElementById('form-title').textContent = t['form-title'];
+        document.getElementById('step-1-title').textContent = t['step-1-title'];
+        document.getElementById('label-customerName').textContent = t['label-customerName'];
+        document.getElementById('label-customerNumber').textContent = t['label-customerNumber'];
+        document.getElementById('label-emailAddress').textContent = t['label-emailAddress'];
+        document.getElementById('label-alertEmailAddress').textContent = t['label-alertEmailAddress'];
+        nextBtn1.textContent = t['next-1'];
+        
+        document.getElementById('step-2-title').textContent = t['step-2-title'];
+        prevBtn2.textContent = t['previous-btn'];
+        submitBtn.textContent = t['submit-btn'];
+        
+        // Update alert labels
+        document.getElementById('label-alert-1').textContent = t['label-alert-1'];
+        document.getElementById('label-axv-value').textContent = t['label-axv-value'];
+        document.getElementById('axv-value').placeholder = t['placeholder-axv-value'];
+        
+        document.getElementById('label-alert-2').textContent = t['label-alert-2'];
+        document.getElementById('label-axs-amount').textContent = t['label-axs-amount'];
+        document.getElementById('axs-amount').placeholder = t['placeholder-axs-amount'];
+
+        document.getElementById('label-alert-3').textContent = t['label-alert-3'];
+        document.getElementById('label-tf-value').textContent = t['label-tf-value'];
+        document.getElementById('tf-value').placeholder = t['placeholder-tf-value'];
+        document.getElementById('label-timeUnit').textContent = t['label-timeUnit'];
+        document.getElementById('label-minutes').textContent = t['label-minutes'];
+        document.getElementById('label-hours').textContent = t['label-hours'];
+        document.getElementById('desc-tf').textContent = t['desc-tf'];
+
+        document.getElementById('label-alert-4').textContent = t['label-alert-4'];
+        document.getElementById('label-pp-product').textContent = t['label-pp-product'];
+        document.getElementById('pp-product').placeholder = t['placeholder-pp-product'];
+
+        document.getElementById('label-alert-5').textContent = t['label-alert-5'];
+        document.getElementById('label-tod-departements').textContent = t['label-tod-departements'];
+        document.getElementById('tod-departements').placeholder = t['placeholder-tod-departements'];
+
+        document.getElementById('label-alert-6').textContent = t['label-alert-6'];
+        document.getElementById('label-ton-networks').textContent = t['label-ton-networks'];
+        document.getElementById('ton-networks').placeholder = t['placeholder-ton-networks'];
+        
+        document.getElementById('label-alert-7').textContent = t['label-alert-7'];
+        document.getElementById('label-countries').textContent = t['label-countries'];
+        document.getElementById('label-country-nl').textContent = t['label-country-nl'];
+        document.getElementById('label-country-be').textContent = t['label-country-be'];
+        document.getElementById('label-country-de').textContent = t['label-country-de'];
+        document.getElementById('label-country-fr').textContent = t['label-country-fr'];
+        document.getElementById('label-country-lu').textContent = t['label-country-lu'];
+
+        document.getElementById('label-alert-8').textContent = t['label-alert-8'];
+        document.getElementById('desc-dubiousOdometer').textContent = t['desc-dubiousOdometer'];
+
+        document.getElementById('label-alert-9').textContent = t['label-alert-9'];
+        document.getElementById('label-days').textContent = t['label-days'];
+        document.getElementById('label-day-mo').textContent = t['label-day-mo'];
+        document.getElementById('label-day-tu').textContent = t['label-day-tu'];
+        document.getElementById('label-day-we').textContent = t['label-day-we'];
+        document.getElementById('label-day-th').textContent = t['label-day-th'];
+        document.getElementById('label-day-fr').textContent = t['label-day-fr'];
+        document.getElementById('label-day-sa').textContent = t['label-day-sa'];
+        document.getElementById('label-day-su').textContent = t['label-day-su'];
+
+        document.getElementById('label-alert-10').textContent = t['label-alert-10'];
+        document.getElementById('label-tbt-start').textContent = t['label-tbt-start'];
+        document.getElementById('label-tbt-end').textContent = t['label-tbt-end'];
+
+        document.getElementById('step-3-title').textContent = t['step-3-title'];
+        document.getElementById('desc-step-3').textContent = t['desc-step-3'];
+        document.getElementById('desc-data-saved').textContent = t['desc-data-saved'];
+    }
+
+    // Function to display status messages
+    function showStatus(messageKey, isError = false) {
+        const lang = document.documentElement.lang;
+        const message = translations[lang][messageKey];
+        statusMessage.textContent = message;
+        statusMessage.className = `text-center mt-4 font-medium ${isError ? 'text-red-500' : 'text-green-500'}`;
+        setTimeout(() => {
+            statusMessage.textContent = '';
+        }, 3000);
+    }
+    
+    // Function to go to the next step
+    function goToStep(stepNumber) {
+        document.getElementById(steps[currentStep]).classList.remove('active');
+        currentStep = stepNumber;
+        document.getElementById(steps[currentStep]).classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Navigation logic
+    nextBtn1.addEventListener('click', () => {
+        let isValid = true;
+
+        // Validation Company Name
+        if (customerName.value.trim() === '') {
+            customerName.classList.add('input-error');
+            isValid = false;
+        } else {
+            customerName.classList.remove('input-error');
+        }
+
+        // Validation Customer Number (must be numeric)
+        if (!/^\d+$/.test(customerNumber.value.trim())) {
+            customerNumber.classList.add('input-error');
+            isValid = false;
+        } else {
+            customerNumber.classList.remove('input-error');
+        }
+
+        // Validation email address of the filler
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailAddress.value.trim())) {
+            emailAddress.classList.add('input-error');
+            isValid = false;
+        } else {
+            emailAddress.classList.remove('input-error');
+        }
+
+        // Validation email address for alerts
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(alertEmailAddress.value.trim())) {
+            alertEmailAddress.classList.add('input-error');
+            isValid = false;
+        } else {
+            alertEmailAddress.classList.remove('input-error');
+        }
+
+        if (isValid) {
+            goToStep(1);
+        } else {
+            showStatus('status-error-validation', true);
+        }
+    });
+
+    prevBtn2.addEventListener('click', () => goToStep(0));
+
+    // Dynamic UI for checkboxes
+    alertCheckboxes.forEach(checkbox => {
+        const parentDiv = checkbox.closest('.alert-item');
+        const paramsDiv = parentDiv.querySelector('.parameters-group');
+
+        // Initialize UI on page load
+        if (checkbox.checked) {
+            parentDiv.classList.add('bg-blue-100', 'border-blue-400');
+            if(paramsDiv) paramsDiv.classList.add('active');
+        } else {
+            parentDiv.classList.remove('bg-blue-100', 'border-blue-400');
+            if(paramsDiv) paramsDiv.classList.remove('active');
+        }
+
+        checkbox.addEventListener('change', () => {
+            if (checkbox.checked) {
+                parentDiv.classList.add('bg-blue-100', 'border-blue-400');
+                if(paramsDiv) paramsDiv.classList.add('active');
+            } else {
+                parentDiv.classList.remove('bg-blue-100', 'border-blue-400');
+                if(paramsDiv) paramsDiv.classList.remove('active');
+            }
+        });
+    });
+
+    // Collect all form data and send it to Google Apps Script
+    submitBtn.addEventListener('click', async () => {
+        if (!googleAppsScriptURL) {
+            showStatus('status-error-url', true);
+            return;
+        }
+        
+        showStatus('status-sending', false);
+
+        const customerData = {
+            customerName: customerName.value.trim(),
+            customerNumber: customerNumber.value.trim(),
+            emailAddress: emailAddress.value.trim(),
+            alertEmailAddress: alertEmailAddress.value.trim()
+        };
+
+        const selectedAlerts = {};
+        alertCheckboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                const alertId = checkbox.dataset.alertId;
+                
+                // Specific processing for alerts with parameters
+                if (alertId === 'aboveXVolume' || alertId === 'aboveXSpend' || alertId === 'productPurchased' || 
+                    alertId === 'transactionOutsideDepartements' || alertId === 'transactionOnNetworks' || 
+                    alertId === 'transactionOnDays' || alertId === 'transactionInCountry' || alertId === 'transactionBetweenTimes' || alertId === 'transactionFrequency') {
+                    
+                    const paramsDiv = document.querySelector(`#params-${alertId}`);
+                    // Specific processing for checkbox groups and radio buttons
+                    if (alertId === 'transactionOnDays') {
+                        const daysCheckboxes = paramsDiv.querySelectorAll('input[name="days"]:checked');
+                        const selectedDays = Array.from(daysCheckboxes).map(cb => cb.value);
+                        selectedAlerts[alertId] = { days: selectedDays };
+                    } else if (alertId === 'transactionInCountry') {
+                        const countryCheckboxes = paramsDiv.querySelectorAll('input[name="country"]:checked');
+                        const selectedCountries = Array.from(countryCheckboxes).map(cb => cb.value);
+                        selectedAlerts[alertId] = { countries: selectedCountries };
+                    } else if (alertId === 'transactionFrequency') {
+                        const timeValue = paramsDiv.querySelector('input[name="timeValue"]').value;
+                        const timeUnit = paramsDiv.querySelector('input[name="timeUnit"]:checked').value;
+                        selectedAlerts[alertId] = {
+                            timeValue: timeValue,
+                            timeUnit: timeUnit
+                        };
+                    } else if (alertId === 'transactionBetweenTimes') {
+                        const startTime = paramsDiv.querySelector('input[name="startTime"]').value;
+                        const endTime = paramsDiv.querySelector('input[name="endTime"]').value;
+                         selectedAlerts[alertId] = {
+                            startTime: startTime,
+                            endTime: endTime
+                        };
+                    } else {
+                        const inputs = paramsDiv.querySelectorAll('input, select');
+                        const parameters = {};
+                        inputs.forEach(input => {
+                            parameters[input.name] = input.value;
+                        });
+                        selectedAlerts[alertId] = parameters;
+                    }
+                } else {
+                    // Alert without parameters
+                    selectedAlerts[alertId] = true;
+                }
+            }
+        });
+
+        const formData = {
+            generalData: customerData,
+            alertsConfiguration: selectedAlerts
+        };
+
+        try {
+            const response = await fetch(googleAppsScriptURL, {
+                method: 'POST',
+                body: JSON.stringify(formData),
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                mode: 'no-cors'
+            });
+            
+            // Assume success with no-cors and go to confirmation page
+            showStatus('status-sending', false);
+            goToStep(2);
+
+        } catch (e) {
+            showStatus('status-error-send', true);
+            console.error("Error sending form:", e);
+        }
+    });
+
+    // Language switcher event listeners
+    langNlBtn.addEventListener('click', () => {
+        document.documentElement.lang = 'nl';
+        setLanguage('nl');
+    });
+
+    langEnBtn.addEventListener('click', () => {
+        document.documentElement.lang = 'en';
+        setLanguage('en');
+    });
+
+    langFrBtn.addEventListener('click', () => {
+        document.documentElement.lang = 'fr';
+        setLanguage('fr');
+    });
+
+    // Initialize the app on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        // Set default language to English on load
+        setLanguage('en');
+    });
+</script>
+
+</body>
+</html>
